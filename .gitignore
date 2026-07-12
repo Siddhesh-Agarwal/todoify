@@ -1,0 +1,10 @@
+node_modules
+.wrangler
+.output
+.vinyl
+dist
+.env
+.dev.vars
+.dev.vars.*
+*.local
+worker-configuration.d.ts
