@@ -4,7 +4,8 @@ import { z } from 'zod'
 import { getDb } from '@/lib/db'
 import { task, task_tags, tag } from '@/lib/db/schema'
 import { requireUserId } from './session.server'
-import { taskStatusSchema } from '@/lib/schemas/task'
+import { taskStatusSchema, type TaskStatus } from '@/lib/schemas/task'
+import { isTransitionAllowed, computeStatusUpdate } from '@/lib/task-lifecycle'
 
 const idsSchema = z.object({
   task_ids: z.array(z.uuid()).min(1).max(500),
@@ -29,21 +30,12 @@ export const bulkChangeStatus = createServerFn({ method: 'POST' })
       )
     if (rows.length === 0) return { updated: 0 }
 
-    const allowed: Record<string, string[]> = {
-      PLANNING: ['IN_PROGRESS', 'DROPPED'],
-      IN_PROGRESS: ['COMPLETED', 'DROPPED', 'PLANNING'],
-      COMPLETED: ['PLANNING'],
-      DROPPED: ['PLANNING'],
-    }
     const to = data.status
     const stmts: any[] = []
     for (const row of rows) {
-      const from = row.status
-      if (!allowed[from]?.includes(to)) continue
-      const set: Record<string, unknown> = { status: to, updated_at: sql`CURRENT_TIMESTAMP` }
-      if (to === 'IN_PROGRESS' && !row.started_at) set.started_at = sql`CURRENT_TIMESTAMP`
-      if (to === 'COMPLETED' || to === 'DROPPED') set.completed_at = sql`CURRENT_TIMESTAMP`
-      if (to === 'PLANNING') set.completed_at = null
+      const from = row.status as TaskStatus
+      if (!isTransitionAllowed(from, to)) continue
+      const set = computeStatusUpdate(to, row.started_at)
       stmts.push(db.update(task).set(set as any).where(eq(task.id, row.id)))
     }
     if (stmts.length > 0) await db.batch(stmts as any)
@@ -56,7 +48,19 @@ export const bulkTrash = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb()
-    const stmts = data.task_ids.map((id) =>
+    // Only trash tasks owned by the user that are not already trashed.
+    const ownedTasks = await db
+      .select({ id: task.id })
+      .from(task)
+      .where(
+        and(
+          eq(task.owner_id, userId),
+          eq(task.is_trashed, false),
+          inArray(task.id, data.task_ids),
+        ),
+      )
+    if (ownedTasks.length === 0) return { trashed: 0 }
+    const stmts = ownedTasks.map(({ id }) =>
       db
         .update(task)
         .set({
@@ -64,10 +68,10 @@ export const bulkTrash = createServerFn({ method: 'POST' })
           trashed_at: sql`CURRENT_TIMESTAMP`,
           updated_at: sql`CURRENT_TIMESTAMP`,
         })
-        .where(and(eq(task.id, id), eq(task.owner_id, userId), eq(task.is_trashed, false))),
+        .where(eq(task.id, id)),
     )
     await db.batch(stmts as any)
-    return { trashed: data.task_ids.length }
+    return { trashed: stmts.length }
   })
 
 // Bulk add tags: resolve each tag name to an id (get-or-create), then insert
@@ -93,12 +97,26 @@ export const bulkAddTags = createServerFn({ method: 'POST' })
 
     // Existing links to skip (so we don't re-insert duplicates).
     const allTagIds = tagNames.map((n) => byName.get(n) ?? newIds[n]!)
+
+    // Only add tags to tasks owned by the user that are not trashed.
+    const ownedTasks = await db
+      .select({ id: task.id })
+      .from(task)
+      .where(
+        and(
+          eq(task.owner_id, userId),
+          eq(task.is_trashed, false),
+          inArray(task.id, data.task_ids),
+        ),
+      )
+    const ownedIds = new Set(ownedTasks.map((r) => r.id))
+
     const alreadyLinked = await db
       .select({ task_id: task_tags.task_id, tag_id: task_tags.tag_id })
       .from(task_tags)
       .where(
         and(
-          inArray(task_tags.task_id, data.task_ids),
+          inArray(task_tags.task_id, [...ownedIds]),
           inArray(task_tags.tag_id, allTagIds),
         ),
       )
@@ -109,6 +127,7 @@ export const bulkAddTags = createServerFn({ method: 'POST' })
       stmts.push(db.insert(tag).values({ id, name, owner_id: userId }))
     }
     for (const taskId of data.task_ids) {
+      if (!ownedIds.has(taskId)) continue
       for (const tagId of allTagIds) {
         if (linkedSet.has(`${taskId}|${tagId}`)) continue
         stmts.push(db.insert(task_tags).values({ task_id: taskId, tag_id: tagId }))
@@ -128,7 +147,13 @@ export const bulkRemoveTags = createServerFn({ method: 'POST' })
     const ownedTaskIds = await db
       .select({ id: task.id })
       .from(task)
-      .where(and(eq(task.owner_id, userId), inArray(task.id, data.task_ids)))
+      .where(
+        and(
+          eq(task.owner_id, userId),
+          eq(task.is_trashed, false),
+          inArray(task.id, data.task_ids),
+        ),
+      )
     if (ownedTaskIds.length === 0) return { removed: 0 }
     const ownedIds = ownedTaskIds.map((r) => r.id)
     await db
@@ -139,5 +164,7 @@ export const bulkRemoveTags = createServerFn({ method: 'POST' })
           inArray(task_tags.tag_id, data.tag_ids),
         ),
       )
+    // Returns the count of owned, non-trashed tasks that were affected.
+    // The actual number of deleted tag links may be lower (some tasks may not have had the tags).
     return { removed: ownedIds.length }
   })

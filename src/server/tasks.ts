@@ -15,6 +15,7 @@ import {
   type TaskStatus,
 } from '@/lib/schemas/task'
 import { toFtsQuery } from '@/lib/fts'
+import { isTransitionAllowed, computeStatusUpdate } from '@/lib/task-lifecycle'
 
 export const getTask = createServerFn({ method: 'GET' })
   .validator(z.object({ id: z.uuid() }))
@@ -272,13 +273,6 @@ export const updateTask = createServerFn({ method: 'POST' })
     return updated
   })
 
-const ALLOWED_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
-  PLANNING: ['IN_PROGRESS', 'DROPPED'],
-  IN_PROGRESS: ['COMPLETED', 'DROPPED', 'PLANNING'],
-  COMPLETED: ['PLANNING'],
-  DROPPED: ['PLANNING'],
-}
-
 export const changeTaskStatus = createServerFn({ method: 'POST' })
   .validator(changeTaskStatusInput)
   .handler(async ({ data }) => {
@@ -292,20 +286,10 @@ export const changeTaskStatus = createServerFn({ method: 'POST' })
 
     const from = existing.status as TaskStatus
     const to = data.status
-    if (!ALLOWED_TRANSITIONS[from]?.includes(to)) {
+    if (!isTransitionAllowed(from, to)) {
       throw new Error(`Invalid status transition: ${from} -> ${to}`)
     }
-
-    const set: Record<string, unknown> = { status: to, updated_at: sql`CURRENT_TIMESTAMP` }
-    if (to === 'IN_PROGRESS' && !existing.started_at) {
-      set.started_at = sql`CURRENT_TIMESTAMP`
-    }
-    if (to === 'COMPLETED' || to === 'DROPPED') {
-      set.completed_at = sql`CURRENT_TIMESTAMP`
-    }
-    if (to === 'PLANNING') {
-      set.completed_at = null // reopen clears completed_at (DESIGN §3)
-    }
+    const set = computeStatusUpdate(to, existing.started_at)
     await db.update(task).set(set as any).where(eq(task.id, data.id))
     const [updated] = await db.select().from(task).where(eq(task.id, data.id))
     return updated
@@ -319,7 +303,7 @@ export const trashTask = createServerFn({ method: 'POST' })
     await db
       .update(task)
       .set({ is_trashed: true, trashed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP` })
-      .where(and(eq(task.id, data.id), eq(task.owner_id, userId)))
+      .where(and(eq(task.id, data.id), eq(task.owner_id, userId), eq(task.is_trashed, false)))
     return { id: data.id, is_trashed: true }
   })
 
