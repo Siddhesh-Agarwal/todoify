@@ -3,7 +3,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { getDb } from '@/lib/db'
 import { task, task_tags, tag } from '@/lib/db/schema'
-import { requireUserId } from './session'
+import { requireUserId } from './session.server'
 import { taskStatusSchema } from '@/lib/schemas/task'
 
 const idsSchema = z.object({

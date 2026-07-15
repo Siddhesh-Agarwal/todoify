@@ -3,7 +3,7 @@ import { and, asc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { getDb, type DB } from '@/lib/db'
 import { project } from '@/lib/db/schema'
-import { requireUserId } from './session'
+import { requireUserId } from './session.server'
 
 export const createProject = createServerFn({ method: 'POST' })
   .validator(

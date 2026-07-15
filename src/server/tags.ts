@@ -3,7 +3,7 @@ import { and, asc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { getDb, type DB } from '@/lib/db'
 import { tag } from '@/lib/db/schema'
-import { requireUserId } from './session'
+import { requireUserId } from './session.server'
 
 export const listTags = createServerFn({ method: 'GET' })
   .validator(z.void().optional())
