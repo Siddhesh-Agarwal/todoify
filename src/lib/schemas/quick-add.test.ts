@@ -94,3 +94,21 @@ describe('parseQuickAdd — malformed input', () => {
     expect(parseQuickAdd('').title).toBe('')
   })
 })
+
+describe('parseQuickAdd — trailing punctuation', () => {
+  it('strips trailing punctuation from project name', () => {
+    expect(parseQuickAdd('do thing #proj, then rest').projectName).toBe('proj')
+  })
+  it('strips trailing punctuation from tag names', () => {
+    expect(parseQuickAdd('fix bug @bug. end').tags).toEqual(['bug'])
+  })
+})
+
+describe('parseQuickAdd — multiple due tokens', () => {
+  it('uses the first due and warns on extras', () => {
+    const r = parseQuickAdd('x due:+1 due:+3')
+    expect(r.dueDate).toBe(dateOffset(1))
+    expect(r.warnings.length).toBe(1)
+    expect(r.title).toBe('x')
+  })
+})
