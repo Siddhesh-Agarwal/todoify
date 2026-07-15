@@ -501,8 +501,8 @@ export const parsedQuickAddSchema = z.object({
 })
 export type ParsedQuickAdd = z.infer<typeof parsedQuickAddSchema>
 
-const DUE_RE = /\bdue:\+(\d+)\b/i
-const PRIORITY_RE = /\bP([0-4])\b/
+const DUE_RE = /\bdue:\+(\S+)\b/i
+const PRIORITY_RE = /\bP([0-4])\b/g
 const PROJECT_RE = /#(\S+)/g
 const TAG_RE = /@(\S+)/g
 
@@ -522,7 +522,7 @@ export function parseQuickAdd(raw: string): ParsedQuickAdd {
   const dueMatch = s.match(DUE_RE)
   if (dueMatch) {
     const n = Number(dueMatch[1])
-    if (Number.isInteger(n) && n >= 0) {
+    if (/^\d+$/.test(dueMatch[1]) && Number.isInteger(n) && n >= 0) {
       dueDate = toDateString(n)
     } else {
       warnings.push(`Ignored invalid due value: "${dueMatch[0]}"`)
@@ -1094,7 +1094,7 @@ export const listTrash = createServerFn({ method: 'GET' })
     z
       .object({
         page: z.coerce.number().int().min(1).default(1),
-        pageSize: z.coerce.number().int().min(1).max(100).default(50),
+  pageSize: z.coerce.number().int().min(1).transform((v) => Math.min(v, 100)).default(50),
       })
       .optional(),
   )
