@@ -177,7 +177,7 @@ export const createTaskFromQuickAdd = createServerFn({ method: 'POST' })
     }
 
     // 2) Resolve tags: existing by name, generate ids for the rest.
-    const tagNames = data.tags
+    const tagNames = [...new Set(data.tags)]
     const existingTags = tagNames.length
       ? await Promise.all(tagNames.map((n) => findTagByName(db, userId, n)))
       : []
