@@ -16,7 +16,8 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Todoify" },
+      { title: "TODOIFY // TASK CONTROL" },
+      { name: "description", content: "Programmer task control system" },
     ],
   }),
   component: RootComponent,
