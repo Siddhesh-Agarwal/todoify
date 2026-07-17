@@ -8,3 +8,4 @@ dist
 .dev.vars.*
 *.local
 worker-configuration.d.ts
+.superpowers/
