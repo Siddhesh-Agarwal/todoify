@@ -30,7 +30,7 @@ export function TaskFilterBar({
   const { data: tags } = useTags();
 
   function go(patch: Partial<TaskListQuery>) {
-    navigate({ to: "/app/activity", search: (prev: TaskListQuery) => ({ ...prev, ...patch, page: 1 }) });
+    navigate({ to: "/app/activity", search: (prev) => ({ ...prev, ...patch, page: 1 }) as TaskListQuery });
   }
 
   const statusArr = Array.isArray(search.status) ? search.status : search.status ? [search.status] : [];

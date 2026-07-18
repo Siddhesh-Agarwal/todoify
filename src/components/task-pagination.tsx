@@ -8,7 +8,7 @@ export function TaskPagination({ total, page, pageSize, search }: { total: numbe
   if (pages <= 1) return null;
 
   function go(p: number) {
-    navigate({ to: "/app/activity", search: (prev: TaskListQuery) => ({ ...prev, page: p }) });
+    navigate({ to: "/app/activity", search: (prev) => ({ ...prev, page: p }) as TaskListQuery });
   }
 
   const nums: (number | "...")[] = [];

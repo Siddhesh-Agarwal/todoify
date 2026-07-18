@@ -10,13 +10,13 @@ export function AppSidebar() {
   const { data: tags } = useTags();
 
   function setFacet(patch: Partial<TaskListQuery>) {
-    navigate({ to: "/app/activity", search: (prev: TaskListQuery) => ({ ...prev, ...patch, page: 1 }) });
+    navigate({ to: "/app/activity", search: (prev) => ({ ...prev, ...patch, page: 1 }) as TaskListQuery });
   }
 
   return (
     <aside className="dash-section hidden flex-col gap-4 bg-background p-4 lg:flex">
       <RailSection title="VIEWS">
-        <RailLink label="ACTIVITY" active={true} onClick={() => navigate({ to: "/app/activity" })} />
+        <RailLink label="ACTIVITY" active={true} onClick={() => navigate({ to: "/app/activity", search: (prev) => prev as TaskListQuery })} />
         <RailLink label="KANBAN" pending />
         <RailLink label="LIST" pending />
         <RailLink label="TRASH" pending />

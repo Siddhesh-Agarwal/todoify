@@ -30,7 +30,7 @@ export function TaskList({
   const navigate = useNavigate();
 
   function setSort(sort: TaskListQuery["sort"]) {
-    navigate({ to: "/app/activity", search: (prev: TaskListQuery) => ({ ...prev, sort }) });
+    navigate({ to: "/app/activity", search: (prev) => ({ ...prev, sort }) as TaskListQuery });
   }
 
   if (isLoading && !data) {

@@ -11,7 +11,7 @@ export function TaskStatHeader({ search }: { search: TaskListQuery }) {
   const navigate = useNavigate();
 
   function go(patch: Partial<TaskListQuery>) {
-    navigate({ to: "/app/activity", search: (prev: TaskListQuery) => ({ ...prev, ...patch, page: 1 }) });
+    navigate({ to: "/app/activity", search: (prev) => ({ ...prev, ...patch, page: 1 }) as TaskListQuery });
   }
 
   const cells: { label: string; value: number; onClick: () => void }[] = [
