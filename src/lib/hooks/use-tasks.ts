@@ -4,6 +4,7 @@ import { listProjects } from '@/server/projects'
 import { listTags } from '@/server/tags'
 import { getTaskStats } from '@/server/stats'
 import { parseQuickAdd } from '@/lib/schemas/quick-add'
+import { priorityToWeight } from '@/lib/schemas/priority'
 import type { TaskListQuery } from '@/lib/schemas/task'
 import type { Task } from '@/lib/db/schema'
 
@@ -70,7 +71,7 @@ export function useCreateQuickAdd(search: TaskListQuery) {
         description: null,
         status: 'PLANNING',
         priority: parsed.priority,
-        priority_weight: 0,
+        priority_weight: priorityToWeight(parsed.priority),
         project_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

@@ -14,12 +14,14 @@ export function TaskStatHeader({ search }: { search: TaskListQuery }) {
     navigate({ to: "/app/activity", search: (prev) => ({ ...prev, ...patch, page: 1 }) as TaskListQuery });
   }
 
+  const ACTIVE_STATUSES: TaskListQuery["status"] = ["PLANNING", "IN_PROGRESS"];
+
   const cells: { label: string; value: number; onClick: () => void }[] = [
     { label: "IN PROGRESS", value: data?.inProgress ?? 0, onClick: () => go({ status: "IN_PROGRESS" }) },
     {
       label: "OVERDUE",
       value: data?.overdue ?? 0,
-      onClick: () => go({ due_before: ymd(new Date(Date.now() - 86_400_000)), due_after: undefined }),
+      onClick: () => go({ due_before: ymd(new Date(Date.now() - 86_400_000)), due_after: undefined, status: ACTIVE_STATUSES }),
     },
     {
       label: "DUE THIS WEEK",
@@ -28,10 +30,10 @@ export function TaskStatHeader({ search }: { search: TaskListQuery }) {
         const today = new Date();
         const week = new Date(today);
         week.setUTCDate(week.getUTCDate() + 7);
-        go({ due_after: ymd(today), due_before: ymd(week) });
+        go({ due_after: ymd(today), due_before: ymd(week), status: ACTIVE_STATUSES });
       },
     },
-    { label: "TOTAL ACTIVE", value: data?.totalActive ?? 0, onClick: () => go({ status: undefined, priority: undefined, project_id: undefined, tag_id: undefined, due_after: undefined, due_before: undefined, search: undefined }) },
+    { label: "TOTAL ACTIVE", value: data?.totalActive ?? 0, onClick: () => go({ status: ACTIVE_STATUSES, priority: undefined, project_id: undefined, tag_id: undefined, due_after: undefined, due_before: undefined, search: undefined }) },
   ];
 
   return (
