@@ -5,13 +5,13 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
   "vars": {
-    "BETTER_AUTH_URL": "http://localhost:3000"
+    "BETTER_AUTH_URL": "https://todoify.siddhesh-agarwal.workers.dev"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "todoify",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "77d30e75-f045-4690-a79d-9109a755f294",
       "migrations_dir": "drizzle"
     }
   ]
