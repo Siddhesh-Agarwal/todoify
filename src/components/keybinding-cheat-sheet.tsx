@@ -1,5 +1,10 @@
 import { useHotkey, useHotkeyRegistrations } from "@tanstack/react-hotkeys";
-import { cn } from "@/lib/utils";
+
+declare module "@tanstack/react-hotkeys" {
+  interface HotkeyMeta {
+    group?: string;
+  }
+}
 
 interface KeybindingCheatSheetProps {
   open: boolean;
@@ -22,7 +27,7 @@ function groupHotkeys(
   const grouped = new Map<GroupId, typeof hotkeys>();
   for (const g of GROUPS) grouped.set(g.id, []);
   for (const hk of hotkeys) {
-    const group = (hk.meta?.group as GroupId) ?? "system";
+    const group = (hk.options.meta?.group as GroupId) ?? "system";
     const arr = grouped.get(group);
     if (arr) arr.push(hk);
   }
@@ -39,7 +44,7 @@ function formatKey(hotkey: string): string {
 export function KeybindingCheatSheet({ open, onClose }: KeybindingCheatSheetProps) {
   const { hotkeys, sequences } = useHotkeyRegistrations();
 
-  useHotkey("Shift+?", () => {
+  useHotkey({ key: "/", shift: true }, () => {
     if (open) onClose();
   }, { ignoreInputs: false });
 
@@ -49,6 +54,9 @@ export function KeybindingCheatSheet({ open, onClose }: KeybindingCheatSheetProp
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Keyboard shortcuts"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={onClose}
       onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
@@ -85,7 +93,7 @@ export function KeybindingCheatSheet({ open, onClose }: KeybindingCheatSheetProp
                       {formatKey(hk.hotkey)}
                     </kbd>
                     <span className="font-mono text-[10px] uppercase tracking-[0.03em] text-muted-foreground">
-                      {hk.meta?.name ?? hk.hotkey}
+                      {hk.options.meta?.name ?? hk.hotkey}
                     </span>
                   </div>
                 ))}
@@ -104,7 +112,7 @@ export function KeybindingCheatSheet({ open, onClose }: KeybindingCheatSheetProp
                     {seq.sequence.join(" → ")}
                   </kbd>
                   <span className="font-mono text-[10px] uppercase tracking-[0.03em] text-muted-foreground">
-                    {seq.meta?.name ?? seq.sequence.join(" ")}
+                    {seq.options.meta?.name ?? seq.sequence.join(" ")}
                   </span>
                 </div>
               ))}
