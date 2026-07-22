@@ -1,13 +1,20 @@
 import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useHotkey } from "@tanstack/react-hotkeys";
 import { taskListQuerySchema, type TaskListQuery } from "@/lib/schemas/task";
 import { useTasks } from "@/lib/hooks/use-tasks";
-import { useKeybindings } from "@/lib/hooks/use-keybindings";
 import { TaskQuickAdd } from "@/components/task-quick-add";
 import { TaskStatHeader } from "@/components/task-stat-header";
 import { TaskFilterBar } from "@/components/task-filter-bar";
 import { TaskList } from "@/components/task-list";
 import { TaskPagination } from "@/components/task-pagination";
+import { KeybindingCheatSheet } from "@/components/keybinding-cheat-sheet";
+
+declare module "@tanstack/react-hotkeys" {
+  interface HotkeyMeta {
+    group?: string;
+  }
+}
 
 export const Route = createFileRoute("/app/activity")({
   validateSearch: (input: Record<string, unknown>): TaskListQuery => {
@@ -22,6 +29,7 @@ function ActivityPage() {
   const quickAddRef = useRef<HTMLInputElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [cursorId, setCursorId] = useState<string | null>(null);
+  const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useTasks(search);
 
   function moveCursor(delta: number) {
@@ -31,16 +39,34 @@ function ActivityPage() {
     setCursorId(data.items[next].id);
   }
 
-  useKeybindings({
-    c: () => quickAddRef.current?.focus(),
-    "/": () => searchRef.current?.focus(),
-    j: () => moveCursor(1),
-    k: () => moveCursor(-1),
-    Escape: () => {
-      const el = document.activeElement as HTMLElement | null;
-      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) el.blur();
-      else setCursorId(null);
-    },
+  useHotkey("C", () => quickAddRef.current?.focus(), {
+    meta: { name: "Create task", description: "Opens quick-add input", group: "task" },
+  });
+
+  useHotkey("/", () => searchRef.current?.focus(), {
+    meta: { name: "Search", description: "Focus search bar", group: "navigation" },
+  });
+
+  useHotkey("J", () => moveCursor(1), {
+    meta: { name: "Next task", description: "Move cursor down", group: "navigation" },
+  });
+
+  useHotkey("K", () => moveCursor(-1), {
+    meta: { name: "Previous task", description: "Move cursor up", group: "navigation" },
+  });
+
+  useHotkey("Escape", () => {
+    const el = document.activeElement as HTMLElement | null;
+    if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) el.blur();
+    else setCursorId(null);
+  }, {
+    ignoreInputs: false,
+    meta: { name: "Close / Clear", description: "Close modal or clear selection", group: "system" },
+  });
+
+  useHotkey({ key: "/", shift: true }, () => setCheatSheetOpen((o) => !o), {
+    ignoreInputs: false,
+    meta: { name: "Help", description: "Show keybinding cheat sheet", group: "system" },
   });
 
   return (
@@ -58,6 +84,7 @@ function ActivityPage() {
         onSelect={setCursorId}
       />
       {data && <TaskPagination total={data.total} page={data.page} pageSize={data.pageSize} search={search} />}
+      <KeybindingCheatSheet open={cheatSheetOpen} onClose={() => setCheatSheetOpen(false)} />
     </div>
   );
 }
