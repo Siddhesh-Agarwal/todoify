@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,19 @@ export function TaskFilterBar({
   const navigate = useNavigate();
   const { data: projects } = useProjects();
   const { data: tags } = useTags();
+  const [localSearch, setLocalSearch] = useState(search.search ?? "");
+
+  useEffect(() => {
+    setLocalSearch(search.search ?? "");
+  }, [search.search]);
+
+  useEffect(() => {
+    if (localSearch === (search.search ?? "")) return;
+    const timer = setTimeout(() => {
+      go({ search: localSearch || undefined });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   function go(patch: Partial<TaskListQuery>) {
     navigate({ to: "/app/activity", search: (prev) => ({ ...prev, ...patch, page: 1 }) as TaskListQuery });
@@ -147,8 +161,8 @@ export function TaskFilterBar({
         {/* Free-text search */}
         <input
           ref={searchInputRef}
-          value={search.search ?? ""}
-          onChange={(e) => go({ search: e.target.value || undefined })}
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
           placeholder="SEARCH (press /)"
           className="h-7 w-[180px] border border-border bg-input px-2 font-mono text-[10px] uppercase tracking-[0.05em] text-foreground outline-none focus-visible:border-foreground"
         />

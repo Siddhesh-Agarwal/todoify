@@ -9,11 +9,28 @@ import { TaskFilterBar } from "@/components/task-filter-bar";
 import { TaskList } from "@/components/task-list";
 import { TaskPagination } from "@/components/task-pagination";
 import { KeybindingCheatSheet } from "@/components/keybinding-cheat-sheet";
+import { getQueryClient } from "@/lib/query";
+import { listTasks } from "@/server/tasks";
+import { getTaskStats } from "@/server/stats";
 
 export const Route = createFileRoute("/app/activity")({
   validateSearch: (input: Record<string, unknown>): TaskListQuery => {
     const parsed = taskListQuerySchema.safeParse(input);
     return parsed.success ? parsed.data : { page: 1, pageSize: 50, sort: "priority" };
+  },
+  loaderDeps: ({ search }) => ({ ...search }),
+  loader: async ({ deps }) => {
+    const queryClient = getQueryClient();
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: ["tasks", deps],
+        queryFn: () => listTasks({ data: deps }),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ["stats", deps],
+        queryFn: () => getTaskStats({ data: deps }),
+      }),
+    ]);
   },
   component: ActivityPage,
 });
