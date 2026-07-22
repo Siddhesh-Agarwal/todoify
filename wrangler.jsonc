@@ -16,6 +16,6 @@
     }
   ],
   "observability": {
-    "enabled": false
+    "enabled": true
   },
 }
