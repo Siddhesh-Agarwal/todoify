@@ -6,6 +6,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { HotkeysProvider } from "@tanstack/react-hotkeys";
 import "@/styles.css";
 import { getQueryClient } from "@/lib/query";
 
@@ -26,9 +27,11 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RootDocument>
-        <Outlet />
-      </RootDocument>
+      <HotkeysProvider>
+        <RootDocument>
+          <Outlet />
+        </RootDocument>
+      </HotkeysProvider>
     </QueryClientProvider>
   );
 }
