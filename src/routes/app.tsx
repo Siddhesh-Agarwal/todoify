@@ -8,12 +8,6 @@ import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "@/components/app-sidebar";
 
-declare module "@tanstack/react-hotkeys" {
-  interface HotkeyMeta {
-    group?: string;
-  }
-}
-
 export const Route = createFileRoute("/app")({
   beforeLoad: async () => {
     const session = await getSession();

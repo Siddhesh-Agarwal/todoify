@@ -8,6 +8,7 @@ declare module "@tanstack/react-hotkeys" {
 
 interface KeybindingCheatSheetProps {
   open: boolean;
+  onToggle: () => void;
   onClose: () => void;
 }
 
@@ -34,18 +35,34 @@ function groupHotkeys(
   return grouped;
 }
 
+const SHIFT_MAP: Record<string, string> = {
+  "/": "?", ".": ">", ",": "<", ";": ":", "'": '"', "[": "{", "]": "}", "\\": "|",
+  "1": "!", "2": "@", "3": "#", "4": "$", "5": "%", "6": "^", "7": "&", "8": "*",
+  "9": "(", "0": ")", "-": "_", "=": "+", "`": "~",
+};
+
 function formatKey(hotkey: string): string {
+  const parts = hotkey.split("+");
+  const shiftIndex = parts.indexOf("shift");
+  const hasShift = shiftIndex !== -1;
+  const baseKey = parts[parts.length - 1];
+
+  if (hasShift && SHIFT_MAP[baseKey]) {
+    const other = parts.filter((_, i) => i !== shiftIndex && i !== parts.length - 1);
+    return [...other, SHIFT_MAP[baseKey]].join("+");
+  }
+
   return hotkey
     .replace(/Mod\+/g, "⌘/")
     .replace(/Control\+/g, "Ctrl+")
     .replace(/Meta\+/g, "⌘+");
 }
 
-export function KeybindingCheatSheet({ open, onClose }: KeybindingCheatSheetProps) {
+export function KeybindingCheatSheet({ open, onToggle, onClose }: KeybindingCheatSheetProps) {
   const { hotkeys, sequences } = useHotkeyRegistrations();
 
   useHotkey({ key: "/", shift: true }, () => {
-    if (open) onClose();
+    onToggle();
   }, { ignoreInputs: false });
 
   if (!open) return null;
@@ -59,11 +76,11 @@ export function KeybindingCheatSheet({ open, onClose }: KeybindingCheatSheetProp
       aria-label="Keyboard shortcuts"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={onClose}
-      onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
     >
       <div
         className="border border-border bg-background p-6 shadow-[0_0_40px_rgba(230,25,25,0.08)]"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
       >
         <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
           <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">

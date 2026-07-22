@@ -10,12 +10,6 @@ import { TaskList } from "@/components/task-list";
 import { TaskPagination } from "@/components/task-pagination";
 import { KeybindingCheatSheet } from "@/components/keybinding-cheat-sheet";
 
-declare module "@tanstack/react-hotkeys" {
-  interface HotkeyMeta {
-    group?: string;
-  }
-}
-
 export const Route = createFileRoute("/app/activity")({
   validateSearch: (input: Record<string, unknown>): TaskListQuery => {
     const parsed = taskListQuerySchema.safeParse(input);
@@ -64,11 +58,6 @@ function ActivityPage() {
     meta: { name: "Close / Clear", description: "Close modal or clear selection", group: "system" },
   });
 
-  useHotkey({ key: "/", shift: true }, () => setCheatSheetOpen((o) => !o), {
-    ignoreInputs: false,
-    meta: { name: "Help", description: "Show keybinding cheat sheet", group: "system" },
-  });
-
   return (
     <div className="flex flex-1 flex-col">
       <TaskQuickAdd ref={quickAddRef} search={search} />
@@ -84,7 +73,7 @@ function ActivityPage() {
         onSelect={setCursorId}
       />
       {data && <TaskPagination total={data.total} page={data.page} pageSize={data.pageSize} search={search} />}
-      <KeybindingCheatSheet open={cheatSheetOpen} onClose={() => setCheatSheetOpen(false)} />
+      <KeybindingCheatSheet open={cheatSheetOpen} onToggle={() => setCheatSheetOpen((o) => !o)} onClose={() => setCheatSheetOpen(false)} />
     </div>
   );
 }
