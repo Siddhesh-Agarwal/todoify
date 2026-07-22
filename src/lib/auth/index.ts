@@ -1,4 +1,3 @@
-import type { IncomingRequestCfProperties } from '@cloudflare/workers-types'
 import { betterAuth } from 'better-auth'
 import { withCloudflare } from 'better-auth-cloudflare'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter'
