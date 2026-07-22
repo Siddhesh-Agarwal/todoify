@@ -1,10 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useTaskStats } from "@/lib/hooks/use-tasks";
+import { ymd } from "@/lib/utils";
 import type { TaskListQuery } from "@/lib/schemas/task";
-
-function ymd(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
 
 export function TaskStatHeader({ search }: { search: TaskListQuery }) {
   const { data, isLoading } = useTaskStats(search);

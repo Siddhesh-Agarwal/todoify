@@ -5,10 +5,7 @@ import { task } from '@/lib/db/schema'
 import { requireUserId } from './session.server'
 import { buildTaskWhere } from '@/lib/task-query'
 import { taskListQuerySchema } from '@/lib/schemas/task'
-
-function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10)
-}
+import { ymd } from '@/lib/utils'
 
 // Four filter-aware counts in a single round-trip via SQLite FILTER clauses.
 // All counts apply the caller's active facets (narrowing the list narrows stats).

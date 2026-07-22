@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
+import { cn, ymd } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -14,10 +14,6 @@ import { TASK_STATUSES } from "@/lib/schemas/task";
 import { PRIORITY_LEVELS } from "@/lib/schemas/priority";
 import type { TaskListQuery } from "@/lib/schemas/task";
 import type { Priority } from "@/lib/schemas/priority";
-
-function ymd(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
 
 export function computeDuePreset(search: TaskListQuery): string {
   const today = new Date();

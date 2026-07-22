@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TaskRow } from "./task-row";
+import { cn } from "@/lib/utils";
 import type { TaskListQuery } from "@/lib/schemas/task";
 import type { Task } from "@/lib/db/schema";
 
@@ -74,12 +75,17 @@ export function TaskList({
             <TableHead className="w-6">▸</TableHead>
             <TableHead>TITLE</TableHead>
             {(Object.keys(SORT_LABELS) as (keyof typeof SORT_LABELS)[]).map((k) => (
-              <TableHead
-                key={k}
-                onClick={() => setSort(k)}
-                className={search.sort === k ? "text-accent" : "text-muted-foreground hover:text-foreground"}
-              >
-                {SORT_LABELS[k]}{search.sort === k ? " ↓" : ""}
+              <TableHead key={k}>
+                <button
+                  type="button"
+                  onClick={() => setSort(k)}
+                  className={cn(
+                    "cursor-pointer font-mono text-[10px] uppercase tracking-[0.05em]",
+                    search.sort === k ? "text-accent" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {SORT_LABELS[k]}{search.sort === k ? " ↓" : ""}
+                </button>
               </TableHead>
             ))}
             <TableHead>TAGS</TableHead>
