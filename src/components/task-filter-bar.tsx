@@ -19,6 +19,18 @@ function ymd(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+export function computeDuePreset(search: TaskListQuery): string {
+  const today = new Date();
+  if (!search.due_after && !search.due_before) return "none";
+  if (!search.due_after && search.due_before === ymd(new Date(today.getTime() - 86_400_000))) return "overdue";
+  if (search.due_after === ymd(today) && search.due_before === ymd(today)) return "today";
+  const week = new Date(today); week.setUTCDate(week.getUTCDate() + 7);
+  if (search.due_after === ymd(today) && search.due_before === ymd(week)) return "week";
+  const next = new Date(week); next.setUTCDate(next.getUTCDate() + 7);
+  if (search.due_after === ymd(week) && search.due_before === ymd(next)) return "next";
+  return "custom";
+}
+
 export function TaskFilterBar({
   search,
   searchInputRef,
@@ -57,7 +69,7 @@ export function TaskFilterBar({
     go({ priority: prioArr.includes(p) ? prioArr.filter((x) => x !== p) : [...prioArr, p] });
   }
 
-  const duePreset = search.due_after && search.due_before ? "custom" : search.due_before && !search.due_after ? "overdue" : "none";
+  const duePreset = computeDuePreset(search);
 
   const activeChips: { label: string; clear: () => void }[] = [
     ...statusArr.map((s) => ({ label: `status:${s}`, clear: () => go({ status: statusArr.filter((x) => x !== s) }) })),
@@ -155,6 +167,7 @@ export function TaskFilterBar({
             <SelectItem value="today">TODAY</SelectItem>
             <SelectItem value="week">THIS WEEK</SelectItem>
             <SelectItem value="next">NEXT WEEK</SelectItem>
+            <SelectItem value="custom">CUSTOM</SelectItem>
           </SelectContent>
         </Select>
 

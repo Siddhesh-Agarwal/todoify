@@ -43,7 +43,7 @@ export function TaskStatHeader({ search }: { search: TaskListQuery }) {
           key={c.label}
           type="button"
           onClick={c.onClick}
-          className="dash-readout flex flex-col gap-1 bg-background px-4 py-3 text-left transition-colors hover:bg-secondary"
+          className="flex flex-col gap-1 bg-background px-4 py-3 text-left transition-colors hover:bg-secondary"
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">{c.label}</span>
           <span className="font-mono text-sm font-medium uppercase tracking-[0.05em] text-foreground">
